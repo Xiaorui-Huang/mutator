@@ -173,6 +173,10 @@ def _overlay(worker: Path, root: Path, relative: str, original: bytes) -> None:
 def create_workers(
     base: Path, root: Path, relative: str, original: bytes, count: int
 ) -> list[Path]:
+    from mutator.crapper_link import ensure_crapper
+
+    if ensure_crapper().discover.language_of(relative) in {'c', 'cpp'}:
+        return _native_workers(base, root, relative, original, count)
     created = []
     for index in range(count):
         worker = base / f"worker-{index}"
@@ -201,6 +205,20 @@ def _drop_bytecode(path: Path) -> None:
         for entry in entries:
             if entry.name.startswith(own) and entry.name.endswith(".pyc"):
                 Path(entry.path).unlink(missing_ok=True)
+
+def _native_workers(base, root, relative, original, count):
+    """Копировать входные файлы: #include и CMake не должны уйти по ссылке в оригинал."""
+
+    created = []
+    for index in range(count):
+        worker = base / f'worker-{index}'
+        shutil.copytree(
+            root, worker, ignore_dangling_symlinks=True,
+            ignore=shutil.ignore_patterns(*SKIP_LINK, 'cmake-build-*', '*.gcda', '*.gcno', '*.o', '*.obj'),
+        )
+        (worker / relative).write_bytes(original)
+        created.append(worker)
+    return created
 
 
 def mapped_cwd(worker: Path, root: Path, cwd: Path) -> Path:
