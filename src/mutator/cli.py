@@ -58,7 +58,7 @@ def _skipped_directory_text() -> str:
 HELP = f"""\
 Usage: mutator [options] [path-or-filter ...]
 
-Discover mutation sites in Clojure, Java, Go, TypeScript, Rust, and Python,
+Discover mutation sites in Clojure, Java, C#, Go, TypeScript, Rust, and Python,
 run the project's tests against each one, and write `.metrics/mutate` for
 uml-viewer. Namespaces and function names are the ones crapper writes into
 `.metrics/crap.edn`.
@@ -160,6 +160,7 @@ Exit codes:
 Coverage, when it is produced, uses the same commands as crapper:
   Clojure      clj -M:cov --lcov
   Java         Maven JaCoCo
+  C#           dotnet test with coverlet LCOV, or Microsoft.Testing.Platform cobertura
   Go           go test ./... -coverprofile=...
   TypeScript   npm run coverage, Vitest, or c8
   Rust         cargo llvm-cov or cargo tarpaulin
