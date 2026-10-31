@@ -20,6 +20,7 @@ The first run of a tree executes every covered mutant. Start with the file you a
 ./mutator src/demo/core.clj          # one file, or a directory
 ./mutator --scan src/demo           # list sites, do not run tests
 ./mutator --changed                 # git additions and edits
+./mutator --changed-since main      # everything the branch changed since main
 ./mutator --mutate-all              # rerun killed mutants too
 ./mutator --no-coverage             # do not skip uncovered lines
 ./mutator --use-existing-coverage   # read reports already on disk
@@ -36,6 +37,8 @@ Once a snapshot exists, the next run is differential. It reruns survivors. It ke
 So any edit to a test, a source file, a config file, or a lockfile reruns every killed mutant. Outside a git repository, nothing is kept. Even when every kill is kept, the baseline runs, so tests that fail now stop the file with exit `2`. Files git ignores, such as `.venv` or `node_modules`, and toolchain versions are not part of the check ([#56](https://github.com/bandoyer/mutator/issues/56)). `--since-last-run` is that same selection. `--mutate-all` is unchanged: it reruns every covered site, whatever the snapshot holds.
 
 Exit `0` when every executed mutant was killed. Exit `1` on a usage error, when a backup differs from its source, or when the project root is inside `target/mutation-workers`, where another run tests its mutants. Exit `2` when the baseline tests fail, in the project or in a worker, when a file has no coverage data, or when a coverage run fails but writes a report. Exit `3` when a mutant survives. A failed baseline, a file with no coverage data, or a failed coverage run's report does not rewrite the snapshot.
+
+`--changed` reads `git status`, so it sees only uncommitted work. `--changed-since <ref>` takes the merge base of `<ref>` and `HEAD` and selects what changed from there: the branch's commits, staged and unstaged edits, and untracked files. Commits that `<ref>` gained after the branch started are not selected. It chooses files; the snapshot still decides which of their sites rerun.
 
 ## Workers
 

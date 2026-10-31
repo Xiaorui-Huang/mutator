@@ -1070,3 +1070,73 @@ def test_a_mutant_runs_its_own_source_when_the_test_command_writes_bytecode(tmp_
     out = capsys.readouterr().out
     assert re.findall(rf"^(KILLED|SURVIVED) +src/{re.escape(name)}:2 (.+)$", out, re.M) == _OWN_STATUSES
     assert code == 3
+
+def _branch_git(root, *args):
+    subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
+
+
+def _write_relative(root, relative, text):
+    path = root / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def test_changed_since_selects_the_branch_scope_from_the_merge_base(tmp_path, monkeypatch, capsys):
+    _branch_git(tmp_path, "init", "-b", "main")
+    _branch_git(tmp_path, "config", "user.email", "t@example.com")
+    _branch_git(tmp_path, "config", "user.name", "t")
+    source = "def {}(x):\n    return x > 0\n"
+    for name in ("base", "edited", "gone"):
+        _write_relative(tmp_path, f"src/{name}.py", source.format(name))
+    _branch_git(tmp_path, "add", "-A")
+    _branch_git(tmp_path, "commit", "-m", "base")
+    _branch_git(tmp_path, "switch", "-c", "feature")
+    _write_relative(tmp_path, "src/committed.py", source.format("committed"))
+    _branch_git(tmp_path, "rm", "-q", "src/gone.py")
+    _branch_git(tmp_path, "add", "-A")
+    _branch_git(tmp_path, "commit", "-m", "feature")
+    _branch_git(tmp_path, "switch", "main")
+    _write_relative(tmp_path, "src/upstream_only.py", source.format("upstream_only"))
+    _write_relative(tmp_path, "src/base.py", "def base(x):\n    return x >= 0\n")
+    _branch_git(tmp_path, "add", "-A")
+    _branch_git(tmp_path, "commit", "-m", "main moves on")
+    _branch_git(tmp_path, "switch", "feature")
+    _write_relative(tmp_path, "src/staged.py", source.format("staged"))
+    _branch_git(tmp_path, "add", "src/staged.py")
+    _write_relative(tmp_path, "src/edited.py", "def edited(x):\n    return x < 0\n")
+    _write_relative(tmp_path, "src/untracked.py", source.format("untracked"))
+    _write_relative(tmp_path, "src/test_untracked.py", "def test_untracked():\n    assert 1 > 0\n")
+    monkeypatch.chdir(tmp_path)
+
+    code = run(["--scan", "--no-coverage", "--changed-since", "main", "--root", str(tmp_path)])
+
+    out = capsys.readouterr().out
+    assert code == 0
+    for name in ("committed", "staged", "edited", "untracked"):
+        assert f"{name}.py:2" in out
+    # main's later commits, unchanged files, deletions, and tests are out of scope.
+    for name in ("upstream_only", "base", "gone", "test_untracked"):
+        assert f"{name}.py" not in out
+
+
+def test_changed_since_an_unknown_ref_returns_gits_status(tmp_path, monkeypatch, capsys):
+    _branch_git(tmp_path, "init", "-b", "main")
+    _branch_git(tmp_path, "config", "user.email", "t@example.com")
+    _branch_git(tmp_path, "config", "user.name", "t")
+    _write_relative(tmp_path, "src/demo.py", "def place(x):\n    return x > 0\n")
+    _branch_git(tmp_path, "add", "-A")
+    _branch_git(tmp_path, "commit", "-m", "base")
+    monkeypatch.chdir(tmp_path)
+
+    code = run(["--scan", "--no-coverage", "--changed-since", "no-such-ref", "--root", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert code != 0
+    assert "demo.py" not in captured.out
+    assert captured.err.strip()
+
+
+def test_changed_since_needs_a_ref_and_excludes_changed():
+    assert parse_args(["--changed-since"]).exit_code == 1
+    assert parse_args(["--changed-since", "main"]).changed_since == "main"
+    assert parse_args(["--changed", "--changed-since", "main"]).exit_code == 1
