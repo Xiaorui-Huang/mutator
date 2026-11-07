@@ -8,6 +8,31 @@ A mutant is killed when the tests fail or time out. It survives when the tests s
 
 ## Run
 
+### User-level installation
+
+In Linux or WSL, with [uv](https://docs.astral.sh/uv/) installed and this fork
+beside the matching crapper fork, run from the mutator checkout:
+
+```text
+uv tool install . --with ../crapper
+uv tool update-shell
+```
+
+Restart the shell if needed. After updating either checkout, run
+`uv tool install --force --no-cache . --with ../crapper` from the mutator checkout to
+replace its installed snapshots. `uv tool uninstall mutator` removes the
+command. Each WSL distro needs its own installation; build from a shared
+checkout sequentially, not in multiple environments at once. Native Windows mutator
+cannot start because Windows lacks `signal.SIGKILL`; open a WSL terminal and
+run `mutator` from the project directory there. Do not mix Windows and WSL
+virtual environments. Check `mutator --help`, the installed version, language
+support, exclusions, and side effects before a run.
+
+Run coverage and mutations in an isolated project copy: the baseline runs in
+the project root, and worker links can reach original files. Preserve working
+edits, record commands and results, and verify source restoration. Do not
+present partial mutation results as a whole-branch score.
+
 ```bash
 ./mutator
 ```
@@ -39,6 +64,10 @@ So any edit to a test, a source file, a config file, or a lockfile reruns every 
 Exit `0` when every executed mutant was killed. Exit `1` on a usage error, when a backup differs from its source, or when the project root is inside `target/mutation-workers`, where another run tests its mutants. Exit `2` when the baseline tests fail, in the project or in a worker, when a file has no coverage data, or when a coverage run fails but writes a report. Exit `3` when a mutant survives. A failed baseline, a file with no coverage data, or a failed coverage run's report does not rewrite the snapshot.
 
 `--changed` reads `git status`, so it sees only uncommitted work. `--changed-since <ref>` takes the merge base of `<ref>` and `HEAD` and selects what changed from there: the branch's commits, staged and unstaged edits, and untracked files. Commits that `<ref>` gained after the branch started are not selected. It chooses files; the snapshot still decides which of their sites rerun.
+
+These options select whole files, not changed lines or before/after scores.
+State the scope first. Use the intended merge target as the explicit ref; a PR
+is not required.
 
 ## Workers
 
