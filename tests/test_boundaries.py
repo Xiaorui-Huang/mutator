@@ -1046,3 +1046,11 @@ def test_a_worker_copy_of_mutator_looks_for_crapper_beside_the_checkout(tmp_path
 
     found = root if sibling else worker.parent
     assert mutator.crapper_link._sibling_src() == found / "crapper" / "src"
+
+def test_scan_counts_a_site_inside_a_covered_multi_line_statement(tmp_path):
+    path = tmp_path / "src" / "demo.py"
+    path.parent.mkdir()
+    path.write_text("def add(a, b):\n    return (a\n            + b)\n", encoding="utf-8")
+    scanned = scan_file(path, tmp_path, covered_lines={2}, ignore_coverage=False, lines=None)
+    assert "uncovered" not in scanned
+    assert "+ -> -" in scanned
