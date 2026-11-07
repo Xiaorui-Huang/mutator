@@ -167,6 +167,10 @@ Coverage, when it is produced, uses the same commands as crapper:
   Python       coverage.py LCOV
   C/C++        CMake >= 3.26, GCC/gcov >= 9; or a ready-made LCOV report
 
+C# note: mutator needs Linux, macOS, or WSL (POSIX process groups), which
+cannot build WPF, WinForms, or .NET Framework projects. For C# prefer
+Stryker.NET (dotnet tool install -g dotnet-stryker), which runs on Windows.
+
 A site on a line the report does not mark as hit is uncovered and is not run.
 A file no report lists has no coverage data: its tool is missing or failed,
 or the reports leave it out. None of its sites runs, its snapshot is left as
