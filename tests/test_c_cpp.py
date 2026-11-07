@@ -60,7 +60,7 @@ def test_old_crapper_is_reported_instead_of_silently_skipping_cpp(monkeypatch):
     crapper = ensure_crapper()
     monkeypatch.setattr(crapper.discover, 'language_of', lambda path: None)
     message = _require_crapper()
-    assert message and 'C/C++' in message and 'motin-na/crapper' in message
+    assert message and 'C/C++' in message and 'Xiaorui-Huang/crapper' in message
 
 
 def test_cmake_plan_rebuilds_then_runs_ctest(tmp_path):
