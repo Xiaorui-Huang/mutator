@@ -1,4 +1,4 @@
-"""Сборка C/C++ перед проверкой мутации: команды обходятся без shell."""
+"""C/C++ build before a mutant is tested: the commands run without a shell."""
 
 import sys
 
@@ -15,5 +15,5 @@ def test_command(directory):
         return [sys.executable, '-c', script]
     if (directory / 'Makefile').is_file() or (directory / 'makefile').is_file():
         return ['make', '-B', 'test']
-    print('Для C/C++ нужен CMakeLists.txt, Makefile или явный --test-command.', file=sys.stderr)
+    print('C/C++ needs a CMakeLists.txt, a Makefile, or an explicit --test-command.', file=sys.stderr)
     return ['false']

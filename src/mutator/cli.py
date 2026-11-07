@@ -63,10 +63,10 @@ run the project's tests against each one, and write `.metrics/mutate` for
 uml-viewer. Namespaces and function names are the ones crapper writes into
 `.metrics/crap.edn`.
 
-C/C++: файлы .c, .cpp, .cc, .cxx, .C и заголовки .h, .hpp, .hh, .hxx,
-.H, .ipp, .inl, .tcc. Нужен crapper с поддержкой C/C++.
-Для CMake перед тестами выполняется отдельная полная пересборка;
-для Makefile используется make -B test. Возможен явный --test-command.
+C/C++: .c, .cpp, .cc, .cxx, .C files and .h, .hpp, .hh, .hxx, .H, .ipp,
+.inl, .tcc headers. Needs a crapper with C/C++ support.
+For CMake, each mutant gets a separate full rebuild before the tests;
+for a Makefile, make -B test runs. An explicit --test-command also works.
 
 A form id is `defn/<name>` or, for a private operation, `defn-/<name>`.
 uml-viewer joins that name to the operation and joins `:namespace` to the
@@ -164,7 +164,7 @@ Coverage, when it is produced, uses the same commands as crapper:
   TypeScript   npm run coverage, Vitest, or c8
   Rust         cargo llvm-cov or cargo tarpaulin
   Python       coverage.py LCOV
-  C/C++        CMake >= 3.26, GCC/gcov >= 9; либо готовый LCOV
+  C/C++        CMake >= 3.26, GCC/gcov >= 9; or a ready-made LCOV report
 
 A site on a line the report does not mark as hit is uncovered and is not run.
 A file no report lists has no coverage data: its tool is missing or failed,

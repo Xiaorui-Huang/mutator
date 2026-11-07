@@ -388,7 +388,7 @@ def _native_parent_excludes(node):
 
 
 def _native_nonruntime(node):
-    """Исключить директивы и константы типов, сохранив тела внутри #if."""
+    """Skip directives and type constants, but keep the bodies inside #if."""
 
     current = node
     while current is not None:

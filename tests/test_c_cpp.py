@@ -81,7 +81,7 @@ def test_c_cpp_workers_copy_build_inputs_and_headers(tmp_path):
     (tmp_path / 'src/main.cpp').write_text('#include "../include/value.hpp"\n')
     (tmp_path / 'tests/test.cpp').write_text('#include "../include/value.hpp"\n')
     (tmp_path / 'build').mkdir()
-    (tmp_path / 'build/CMakeCache.txt').write_text('Старый кэш')
+    (tmp_path / 'build/CMakeCache.txt').write_text('Old cache')
     base = tmp_path / 'target/mutation-workers/run-test'
     workers = create_workers(base, tmp_path, 'include/value.hpp', original, 2)
     for worker in workers:
@@ -89,12 +89,12 @@ def test_c_cpp_workers_copy_build_inputs_and_headers(tmp_path):
         assert not (worker / 'tests/test.cpp').is_symlink()
         assert not (worker / 'CMakeLists.txt').is_symlink()
         assert not (worker / 'build').exists()
-        (worker / 'include/value.hpp').write_text('Мутация')
+        (worker / 'include/value.hpp').write_text('Mutation')
     assert header.read_bytes() == original
     delete_tree(base)
 
 
-@pytest.mark.skipif(not all(shutil.which(x) for x in ['gcc', 'g++', 'gcov', 'cmake', 'ctest']), reason='Нужны GCC и CMake')
+@pytest.mark.skipif(not all(shutil.which(x) for x in ['gcc', 'g++', 'gcov', 'cmake', 'ctest']), reason='Needs GCC and CMake')
 @pytest.mark.parametrize('suffix', ['.c', '.cpp', '.hpp'])
 def test_real_compiled_mutants_are_killed_survive_or_stay_uncovered(tmp_path, suffix):
     from mutator.crapper_link import ensure_crapper
@@ -136,7 +136,7 @@ add_test(NAME sample COMMAND sample)
         ignore_coverage=False, mutate_all=True, lines=None, test_command=None,
         timeout_factor=20, mutation_warning=50, baselines={}, max_workers=2,
     )
-    assert not result.baseline_failed, result.baseline_message
+    assert not result.stopped, result.stopped
     by_name = {form.name: form for form in result.forms}
     assert by_name['value'].killed == 2
     assert by_name['positive'].survived == 2

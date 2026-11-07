@@ -207,7 +207,7 @@ def _drop_bytecode(path: Path) -> None:
                 Path(entry.path).unlink(missing_ok=True)
 
 def _native_workers(base, root, relative, original, count):
-    """Копировать входные файлы: #include и CMake не должны уйти по ссылке в оригинал."""
+    """Copy the input files, so #include and CMake never reach the original through a link."""
 
     created = []
     for index in range(count):

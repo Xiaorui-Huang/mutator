@@ -1,7 +1,7 @@
 [project]
 name = "mutator"
 version = "0.1.0"
-description = "Мутационное тестирование C/C++, Clojure, Java, Go, TypeScript, Rust и Python с отчётом для uml-viewer."
+description = "Mutation testing for C/C++, Clojure, Java, Go, TypeScript, Rust, and Python, with a report for uml-viewer."
 readme = "README.md"
 license = { file = "LICENSE" }
 classifiers = ["License :: OSI Approved :: Zero-Clause BSD (0BSD)"]

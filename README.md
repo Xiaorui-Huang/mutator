@@ -138,25 +138,25 @@ python3 -m venv .venv
 .venv/bin/pytest
 ```
 
-## Поддержка C/C++ в этом форке
+## C/C++ support in this fork
 
-Для работы нужен форк `crapper` с тем же расширением языков. Разместите
-репозитории рядом либо установите этот `crapper` в окружение `mutator`:
+This needs a `crapper` that has the same language extension. Put the
+repositories side by side, or install that `crapper` into `mutator`'s
+environment:
 
 ```bash
-git clone https://github.com/motin-na/crapper.git
-git clone https://github.com/motin-na/mutator.git
+git clone https://github.com/Xiaorui-Huang/crapper.git
+git clone https://github.com/Xiaorui-Huang/mutator.git
 ```
 
-Поддерживаются те же расширения C/C++ и правила обнаружения функций,
-что в `crapper`, включая определения в заголовках. Заголовки `.h`
-разбираются как C++. Изменяются арифметические операции, сравнения,
-логические операторы, отрицание, булевы значения и целочисленные
-константы 0/1, в том числе `0U`, `1LL`, `0x0`, `0b1` и суффиксы.
-Учитываются альтернативные записи C++ `and`, `or`, `not`, `not_eq`.
-Строки, символы, комментарии, директивы и условия препроцессора,
-размеры массивов, аргументы шаблонов, `sizeof` и `static_assert`
-не являются местами мутаций.
+The C/C++ extensions and the function-detection rules are the same as in
+`crapper`, including definitions in headers. `.h` headers are parsed as C++.
+Mutations change arithmetic operations, comparisons, logical operators,
+negation, boolean values, and the integer constants 0 and 1, including `0U`,
+`1LL`, `0x0`, `0b1`, and suffixes. The C++ alternative tokens `and`, `or`,
+`not`, and `not_eq` count too. Strings, characters, comments, preprocessor
+directives and conditions, array sizes, template arguments, `sizeof`, and
+`static_assert` are not mutation sites.
 
 ```bash
 ./mutator --root /path/to/project --scan src include
@@ -164,38 +164,37 @@ git clone https://github.com/motin-na/mutator.git
 ./mutator --root /path/to/project --max-workers 2 include/value.hpp
 ```
 
-Для CMake перед тестами выполняются конфигурирование, полная пересборка
-в `target/cpp-mutation-build` и CTest с запретом пустого набора тестов.
-Нужны `CMake >= 3.26` и рабочая цепочка компиляции проекта. Для Makefile
-команда по умолчанию — `make -B test`.
+For CMake, each mutant is tested by configuring, doing a full rebuild in
+`target/cpp-mutation-build`, and running CTest, with an empty test set
+counted as an error. This needs `CMake >= 3.26` and the project's working
+toolchain. For a Makefile project, the default command is `make -B test`.
 
-Каждый работник получает собственную копию входных файлов проекта,
-включая заголовки, тесты и файлы сборки. Каталоги сборки и объектные
-файлы не переносятся. Это позволяет проверять мутации заголовков
-без чтения исходного заголовка по ссылке и без общего кэша сборки.
-Копирование проекта и полная пересборка могут занимать заметное время;
-число копий ограничивается `--max-workers`.
+Each worker gets its own copy of the project's input files, including headers,
+tests, and build files. Build directories and object files are not copied.
+That way a header mutation is tested without reading the original header
+through a link, and without a shared build cache. Copying the project and
+rebuilding in full can take a while; `--max-workers` caps the number of copies.
 
-Покрытие создаётся `crapper`: автоматически для CMake/GCC либо собственной
-командой `--coverage-command`, записывающей LCOV в `coverage/lcov.info`
-или `target/coverage/**/lcov.info`. Для Clang и других систем сборки
-передавайте собственные команды покрытия и тестов. `--test-command`
-должен пересобирать изменённый код внутри текущего каталога работника;
-абсолютные пути к исходному дереву обходят изоляцию.
+`crapper` produces the coverage: automatically for CMake/GCC, or with your own
+`--coverage-command` that writes LCOV to `coverage/lcov.info` or
+`target/coverage/**/lcov.info`. For Clang and other build systems, pass your
+own coverage and test commands. A `--test-command` must rebuild the changed
+code inside the worker's current directory; absolute paths into the original
+source tree bypass the isolation.
 
 ```bash
 ./mutator --root /path/to/project --no-coverage \
   --test-command 'make -B test' src/value.c
 ```
 
-Синтаксический анализ не раскрывает макросы и не выбирает активную
-ветвь препроцессора. Успех базового прогона проверяется до мутаций.
-Как и для остальных языков, ошибка компиляции мутации считается
-пойманной мутацией. Имена перегрузок группируются по исходной схеме отчёта.
+The parse does not expand macros and does not choose the active preprocessor
+branch. The baseline run must pass before any mutant runs. As for the other
+languages, a mutant that fails to compile counts as killed. Overload names are
+grouped as in the original report schema.
 
-Проверки собирают настоящие проекты C, C++ и C++ с заголовком; они
-различают пойманные, выжившие и непокрытые мутации и проверяют сохранность
-исходных файлов, в том числе в пути с пробелами и кириллицей:
+The tests build real C, C++, and header-only C++ projects. They tell killed,
+surviving, and uncovered mutants apart, and check that the source files are
+left intact, including under a path with spaces and Cyrillic letters:
 
 ```bash
 .venv/bin/python -m pytest -q tests/test_c_cpp.py
